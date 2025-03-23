@@ -109,6 +109,7 @@ def main(
 
     print(input_args)
     print(type(input_args))
+    print(f"JAX sees the following devices: {jax.devices()}")
  
 
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
