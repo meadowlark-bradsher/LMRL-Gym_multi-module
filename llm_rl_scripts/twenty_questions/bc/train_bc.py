@@ -125,12 +125,17 @@ def main(
         raw_train = json.load(f)
     with open(convert_path(eval_data_path), 'r') as f:
         raw_eval = json.load(f)
+        print("Number of eval samples: ", len(raw_eval))
 
     train_text_trajectories = create_trajectories_from_conversations(raw_train)
     eval_text_trajectories = create_trajectories_from_conversations(raw_eval)
 
-    def convert_trajectory_to_masked_text(trajectories):
+    def convert_trajectory_to_masked_text(trajectories, data_name='TRAIN"'):
+        count = 0
         for trajectory in trajectories:
+            count = count + 1
+            if count % 50 == 0:
+                print(f"[{data_name}] Trajectory #{count}: {trajectory}")
             text_history = trajectory.text_history
             lst = []
             for text in text_history:
@@ -152,7 +157,7 @@ def main(
     )
 
     eval_data = MaskIterableDataset.blocked_from_str_segments_iterable(
-        convert_trajectory_to_masked_text(eval_text_trajectories), 
+        convert_trajectory_to_masked_text(eval_text_trajectories, "EVAL"),
         tokenizer, 
         blocking_strategy=BlockingStrategy(
             padding=Padding.RIGHT, 
@@ -160,6 +165,10 @@ def main(
             max_length=max_length, 
         ), 
     )
+
+    eval_iter = iter(eval_data)
+    first_eval_batch = next(eval_iter, None)
+    print("First eval batch:", first_eval_batch)
 
     model_prng_key = jax.random.PRNGKey(2)
     policy_prng, oracle_prng = jax.random.split(model_prng_key)
