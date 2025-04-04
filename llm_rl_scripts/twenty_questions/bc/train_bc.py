@@ -282,6 +282,16 @@ def main(
             out_str_process=lambda x: x.removesuffix('\n')+'\n', 
         )
 
+        eval_data = MaskIterableDataset.blocked_from_str_segments_iterable(
+            convert_trajectory_to_masked_text(eval_text_trajectories, "EVAL"),
+            tokenizer,
+            blocking_strategy=BlockingStrategy(
+                padding=Padding.RIGHT,
+                truncation=Truncation.LEFT,
+                max_length=max_length,
+            ),
+        )
+
         loss_metrics = eval_loss(
             inference=inference, 
             dataset=eval_data, 
