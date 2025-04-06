@@ -143,7 +143,9 @@ def create_trajectory_from_conversation(conversation: Conversation, max_conversa
     if recompute_done:
         raise NotImplementedError("Not yet implemented recompute_done=True.")
 
-    text_history: TextHistory = [Text(INITIAL_STR, is_action=False)]
+    answer = (f"Answer: {conversation['word'][0]}, ")
+    INITIAL_STR2 = answer + INITIAL_STR
+    text_history: TextHistory = [Text(INITIAL_STR2, is_action=False)]
     reward: List[float] = [0.0]
     done: bool = True
 
