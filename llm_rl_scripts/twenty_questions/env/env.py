@@ -2,7 +2,7 @@ from dataclasses import replace
 from typing import Dict, List, Optional, Tuple
 import random
 from LLM_RL.environment import Text, TextEnv, BatchedTextEnv, TextHistory, TextPolicy, StepResult
-from .data import INVALID_QUESTION, INITIAL_STR2, WordVariants, create_trajectory_from_history, rtg_to_token_str, token_str_to_rtg
+from .data import INVALID_QUESTION, INITIAL_STR, WordVariants, create_trajectory_from_history, rtg_to_token_str, token_str_to_rtg
 from .oracle import TwentyQuestionsOracle
 
 
@@ -53,7 +53,7 @@ class TwentyQuestionsPolicyEnvironment(TextEnv):
         else:
             self.curr_word = self.random.choice(self.word_list)
 
-        return (Text(INITIAL_STR2, is_action=False),)
+        return (Text(INITIAL_STR, is_action=False),)
 
     def copy(self):
         return TwentyQuestionsPolicyEnvironment(
@@ -128,7 +128,7 @@ class BatchedTwentyQuestionsPolicyEnvironment(BatchedTextEnv):
             else:
                 self.curr_words.append(self.randoms[i].choice(self.word_list))
 
-            initial_text_history_batch.append((Text(INITIAL_STR2, is_action=False),))
+            initial_text_history_batch.append((Text(INITIAL_STR, is_action=False),))
 
         return initial_text_history_batch
 
