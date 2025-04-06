@@ -71,6 +71,7 @@ DEFAULT_OBJECT_DICT = {
 
 INVALID_QUESTION = "Is this a valid question?\n"
 INITIAL_STR = "Questions:\n"
+INITIAL_STR2 = ""
 
 
 def get_default_word_list() -> List[WordVariants]:
