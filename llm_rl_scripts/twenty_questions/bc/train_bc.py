@@ -131,11 +131,11 @@ def main(
     train_text_trajectories = create_trajectories_from_conversations(raw_train)
     eval_text_trajectories = create_trajectories_from_conversations(raw_eval)
 
-    def convert_trajectory_to_masked_text(trajectories, data_name='TRAIN"'):
+    def convert_trajectory_to_masked_text(trajectories, data_name='TRAIN"', quiet_mode=False):
         count = 0
         for trajectory in trajectories:
             count = count + 1
-            if count % 50 == 0:
+            if count % 50 == 0 and not quiet_mode:
                 print(f"[{data_name}] Trajectory #{count}: {trajectory}")
             text_history = trajectory.text_history
             lst = []
@@ -149,7 +149,7 @@ def main(
 
     if use_noniterable_dataset:
         train_data = build_sized_mask_dataset(
-            str_segments_iterable=convert_trajectory_to_masked_text(train_text_trajectories),
+            str_segments_iterable=convert_trajectory_to_masked_text(train_text_trajectories, quiet_mode=True),
             tokenizer=tokenizer,
             blocking_strategy=BlockingStrategy(
                 padding=Padding.RIGHT,
