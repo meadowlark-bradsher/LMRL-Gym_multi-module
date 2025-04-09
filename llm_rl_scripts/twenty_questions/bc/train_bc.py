@@ -147,9 +147,9 @@ def main(
     # train_text_histories = [convert_trajectory_to_masked_text(text_trajectory) for text_trajectory in train_text_trajectories]
     # eval_text_histories = [convert_trajectory_to_masked_text(text_trajectory) for text_trajectory in eval_text_trajectories]
 
-    if (use_noniterable_dataset):
+    if use_noniterable_dataset:
         train_data = build_sized_mask_dataset(
-            str_segments_iterable=train_text_trajectories,
+            str_segments_iterable=convert_trajectory_to_masked_text(train_text_trajectories),
             tokenizer=tokenizer,
             blocking_strategy=BlockingStrategy(
                 padding=Padding.RIGHT,
