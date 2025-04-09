@@ -137,6 +137,8 @@ def main(
             count = count + 1
             if count % 50 == 0 and not quiet_mode:
                 print(f"[{data_name}] Trajectory #{count}: {trajectory}")
+            elif count % 1000 == 0 and quiet_mode:
+                print(f"[Trajectory #{count}")
             text_history = trajectory.text_history
             lst = []
             for text in text_history:
