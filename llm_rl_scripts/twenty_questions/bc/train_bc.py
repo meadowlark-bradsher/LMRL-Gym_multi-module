@@ -102,7 +102,7 @@ def main(
     force_pad_embeddings: bool=False,
 
     should_restore_loop_state: bool=False,
-    use_iterable_dataset: bool=True
+    use_noniterable_dataset: bool=False
 ):
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
@@ -147,17 +147,7 @@ def main(
     # train_text_histories = [convert_trajectory_to_masked_text(text_trajectory) for text_trajectory in train_text_trajectories]
     # eval_text_histories = [convert_trajectory_to_masked_text(text_trajectory) for text_trajectory in eval_text_trajectories]
 
-    if(use_iterable_dataset):
-        train_data = MaskIterableDataset.blocked_from_str_segments_iterable(
-            convert_trajectory_to_masked_text(train_text_trajectories),
-            tokenizer,
-            blocking_strategy=BlockingStrategy(
-                padding=Padding.RIGHT,
-                truncation=Truncation.LEFT,
-                max_length=max_length,
-            ),
-        )
-    else:
+    if (use_noniterable_dataset):
         train_data = build_sized_mask_dataset(
             str_segments_iterable=train_text_trajectories,
             tokenizer=tokenizer,
@@ -166,6 +156,16 @@ def main(
                 truncation=Truncation.LEFT,
                 max_length=max_length,
             )
+        )
+    else:
+        train_data = MaskIterableDataset.blocked_from_str_segments_iterable(
+            convert_trajectory_to_masked_text(train_text_trajectories),
+            tokenizer,
+            blocking_strategy=BlockingStrategy(
+                padding=Padding.RIGHT,
+                truncation=Truncation.LEFT,
+                max_length=max_length,
+            ),
         )
 
     eval_data = MaskIterableDataset.blocked_from_str_segments_iterable(
