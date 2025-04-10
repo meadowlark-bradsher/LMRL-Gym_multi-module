@@ -138,7 +138,7 @@ def main(
             if count % 50 == 0 and not quiet_mode:
                 print(f"[{data_name}] Trajectory #{count}: {trajectory}")
             elif count % 1000 == 0 and quiet_mode:
-                print(f"[Trajectory #{count}")
+                print(f"[Trajectory #{count}]")
             text_history = trajectory.text_history
             lst = []
             for text in text_history:
@@ -150,8 +150,9 @@ def main(
     # eval_text_histories = [convert_trajectory_to_masked_text(text_trajectory) for text_trajectory in eval_text_trajectories]
 
     if use_noniterable_dataset:
+        train_segments_list = list(convert_trajectory_to_masked_text(train_text_trajectories, quiet_mode=True))
         train_data = MaskDataset.blocked_from_str_segments_list(
-            str_segments_iterable=convert_trajectory_to_masked_text(train_text_trajectories, quiet_mode=True),
+            str_segments_list=train_segments_list,
             tokenizer=tokenizer,
             blocking_strategy=BlockingStrategy(
                 padding=Padding.RIGHT,
