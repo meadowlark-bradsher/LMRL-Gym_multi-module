@@ -114,7 +114,8 @@ def main(
 
     gamma: float=0.99, 
     tau: float=0.7, 
-    cql_weight: float=0.01, 
+    cql_weight: float=0.01,
+    use_noniterable_dataset: bool=False
 ):
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
@@ -145,15 +146,27 @@ def main(
             token_trajectory = TokenTrajectoryChain.from_text_trajectory_chain(trajectory_chain, tokenizer)
             yield ILQLData.from_token_trajectory_chain(token_trajectory)
 
-    train_dataset = ILQLIterableDataset.from_ilql_data_iterable(
-        ilql_data_generator(train_text_trajectories), 
-        tokenizer, 
-        BlockingStrategy(
-            padding=Padding.RIGHT, 
-            truncation=Truncation.RIGHT, 
-            max_length=max_length, 
-        ), 
-    )
+    if use_noniterable_dataset:
+        train_segments_list = list(ilql_data_generator(train_text_trajectories))
+        train_dataset = ILQLDataset.from_ilql_data_list(
+            train_segments_list,
+            tokenizer,
+            BlockingStrategy(
+                padding=Padding.RIGHT,
+                truncation=Truncation.RIGHT,
+                max_length=max_length,
+            ),
+        )
+    else:
+        train_dataset = ILQLIterableDataset.from_ilql_data_iterable(
+            ilql_data_generator(train_text_trajectories),
+            tokenizer,
+            BlockingStrategy(
+                padding=Padding.RIGHT,
+                truncation=Truncation.RIGHT,
+                max_length=max_length,
+            ),
+        )
 
     eval_dataset = ILQLIterableDataset.from_ilql_data_iterable(
         ilql_data_generator(eval_text_trajectories), 
