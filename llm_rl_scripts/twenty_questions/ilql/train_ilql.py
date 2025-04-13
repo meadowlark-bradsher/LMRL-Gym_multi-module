@@ -438,6 +438,16 @@ def main(
             out_str_process=lambda x: x.removesuffix('\n')+'\n', 
         )
 
+        eval_dataset = ILQLIterableDataset.from_ilql_data_iterable(
+            ilql_data_generator(eval_text_trajectories),
+            tokenizer,
+            BlockingStrategy(
+                padding=Padding.RIGHT,
+                truncation=Truncation.RIGHT,
+                max_length=max_length,
+            ),
+        )
+
         loss_results = eval_loss(
             inference=inference, 
             dataset=eval_dataset, 
