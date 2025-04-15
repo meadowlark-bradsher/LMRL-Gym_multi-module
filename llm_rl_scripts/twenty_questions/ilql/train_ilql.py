@@ -225,9 +225,6 @@ def main(
         params_dtype=jnp.float32,
     )
 
-    new_opt = policy_optim_getter(base_train_state.params)
-    base_train_state = base_train_state.replace(opt_state=new_opt.opt_state)
-
     base_model.config.gradient_checkpointing = gradient_checkpointing
     base_model.config.gradient_checkpointing_policy = gradient_checkpointing_policy
     with jax.default_device(jax.devices('cpu')[0]):
