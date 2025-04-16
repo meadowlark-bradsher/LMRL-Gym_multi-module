@@ -83,7 +83,7 @@ def main(
     save_at_end: bool=False,
     save_best: bool=True,
     max_checkpoints: Optional[int]=None,
-    save_train_state: bool=True,
+    save_only_params: bool=False,
     save_bf16: bool=True,
 
     eval_loss_bsize: int=32,
@@ -104,6 +104,7 @@ def main(
     should_restore_loop_state: bool=False,
     use_noniterable_dataset: bool=False
 ):
+    save_train_state = not save_only_params
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
     input_args = dict(locals())
