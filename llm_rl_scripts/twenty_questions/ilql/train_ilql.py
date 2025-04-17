@@ -404,36 +404,36 @@ def main(
         ),
         loss_fn=loss_fn,
     )
-    #oracle_prng = jax.random.PRNGKey(7)
-    # env = TwentyQuestionsPolicyEnvironment(
-    #     oracle=T5Oracle.load_oracle(
-    #         mesh=mesh,
-    #         prng_key=oracle_prng,
-    #         model_load_mode=T5OracleModelLoadMode.PARAMS,
-    #         model_load_path=oracle_model_path,
-    #         use_fp16_activations=False,
-    #         use_fp16_params=False,
-    #         max_input_length=124,
-    #         max_output_length=4,
-    #     ),
-    #     word_list=get_default_word_list(),
-    #     max_conversation_length=20,
-    # )
-    with oracle_mesh:
-        env = TwentyQuestionsPolicyEnvironment(
-            oracle=T5Oracle.load_oracle(
-                mesh=None,
-                prng_key=jax.random.PRNGKey(7),
-                model_load_mode=T5OracleModelLoadMode.PARAMS,
-                model_load_path=oracle_model_path,
-                use_fp16_params=True,
-                use_fp16_activations=True,
-                max_input_length=124,
-                max_output_length=4,
-            ),
-            word_list=get_default_word_list(),
-            max_conversation_length=20,
-        )
+    oracle_prng = jax.random.PRNGKey(7)
+    env = TwentyQuestionsPolicyEnvironment(
+        oracle=T5Oracle.load_oracle(
+            mesh=mesh,
+            prng_key=oracle_prng,
+            model_load_mode=T5OracleModelLoadMode.PARAMS,
+            model_load_path=oracle_model_path,
+            use_fp16_activations=False,
+            use_fp16_params=False,
+            max_input_length=124,
+            max_output_length=4,
+        ),
+        word_list=get_default_word_list(),
+        max_conversation_length=20,
+    )
+    # with oracle_mesh:
+    #     env = TwentyQuestionsPolicyEnvironment(
+    #         oracle=T5Oracle.load_oracle(
+    #             mesh=None,
+    #             prng_key=jax.random.PRNGKey(7),
+    #             model_load_mode=T5OracleModelLoadMode.PARAMS,
+    #             model_load_path=oracle_model_path,
+    #             use_fp16_params=True,
+    #             use_fp16_activations=True,
+    #             max_input_length=124,
+    #             max_output_length=4,
+    #         ),
+    #         word_list=get_default_word_list(),
+    #         max_conversation_length=20,
+    #     )
 
 
     save_dir, exp_name = setup_experiment_save(
