@@ -1,5 +1,6 @@
 from typing import Optional
 import tyro
+import numpy as np
 from JaxSeq.bucket_manager import open_with_bucket as open
 from transformers import AutoTokenizer
 from JaxSeq.utils import jsonl_stream, convert_path, load_mesh, setup_experiment_save
@@ -117,6 +118,21 @@ def main(
     cql_weight: float=0.01,
     use_noniterable_dataset: bool=False
 ):
+    all_gpus = jax.devices('gpu')
+    train_devices = np.array(all_gpus[1:])  # GPUs 1‑7
+    train_mesh = load_mesh(
+        mesh_shape=(7, 1, 1),
+        axis_names=('dp', 'fsdp', 'mp'),
+        devices=train_devices  # <-- key part
+    )
+    oracle_device = np.array([all_gpus[0]])  # GPU‑0 only
+    oracle_mesh = load_mesh(
+        mesh_shape=(1, 1, 1),
+        axis_names=('dp', 'fsdp', 'mp'),
+        devices=oracle_device
+    )
+
+
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
     input_args = dict(locals())
@@ -125,7 +141,7 @@ def main(
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
 
-    mesh = load_mesh((data_mesh_shape, fsdp_mesh_shape, model_mesh_shape), ('dp', 'fsdp', 'mp'))
+    mesh = train_mesh #load_mesh((data_mesh_shape, fsdp_mesh_shape, model_mesh_shape), ('dp', 'fsdp', 'mp'))
     is_main_process = jax.process_index() == 0
     print(f"Mesh: {mesh}")
     print(f"Is main process: {is_main_process}")
@@ -388,21 +404,36 @@ def main(
         ),
         loss_fn=loss_fn,
     )
-    oracle_prng = jax.random.PRNGKey(7)
-    env = TwentyQuestionsPolicyEnvironment(
-        oracle=T5Oracle.load_oracle(
-            mesh=mesh,
-            prng_key=oracle_prng,
-            model_load_mode=T5OracleModelLoadMode.PARAMS,
-            model_load_path=oracle_model_path,
-            use_fp16_activations=False,
-            use_fp16_params=False,
-            max_input_length=124,
-            max_output_length=4,
-        ),
-        word_list=get_default_word_list(),
-        max_conversation_length=20,
-    )
+    #oracle_prng = jax.random.PRNGKey(7)
+    # env = TwentyQuestionsPolicyEnvironment(
+    #     oracle=T5Oracle.load_oracle(
+    #         mesh=mesh,
+    #         prng_key=oracle_prng,
+    #         model_load_mode=T5OracleModelLoadMode.PARAMS,
+    #         model_load_path=oracle_model_path,
+    #         use_fp16_activations=False,
+    #         use_fp16_params=False,
+    #         max_input_length=124,
+    #         max_output_length=4,
+    #     ),
+    #     word_list=get_default_word_list(),
+    #     max_conversation_length=20,
+    # )
+    with oracle_mesh:
+        env = TwentyQuestionsPolicyEnvironment(
+            oracle=T5Oracle.load_oracle(
+                mesh=None,
+                prng_key=jax.random.PRNGKey(7),
+                model_load_mode=T5OracleModelLoadMode.PARAMS,
+                model_load_path=oracle_model_path,
+                use_fp16_params=True,
+                use_fp16_activations=True,
+                max_input_length=124,
+                max_output_length=4,
+            ),
+            word_list=get_default_word_list(),
+            max_conversation_length=20,
+        )
 
 
     save_dir, exp_name = setup_experiment_save(
