@@ -121,7 +121,7 @@ def main(
     all_gpus = jax.devices('gpu')
     train_devices = np.array(all_gpus[1:])  # GPUs 1‑7
     train_mesh = load_mesh(
-        mesh_shape=(7, 1, 1),
+        shape=(7, 1, 1),
         axis_names=('dp', 'fsdp', 'mp'),
         devices=train_devices  # <-- key part
     )
