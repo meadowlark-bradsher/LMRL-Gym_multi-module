@@ -118,19 +118,19 @@ def main(
     cql_weight: float=0.01,
     use_noniterable_dataset: bool=False
 ):
-    all_gpus = jax.devices('gpu')
-    train_devices = np.array(all_gpus[1:])  # GPUs 1‑7
-    train_mesh = load_mesh(
-        shape=(7, 1, 1),
-        axis_names=('dp', 'fsdp', 'mp'),
-        devices=train_devices  # <-- key part
-    )
-    oracle_device = np.array([all_gpus[0]])  # GPU‑0 only
-    oracle_mesh = load_mesh(
-        shape=(1, 1, 1),
-        axis_names=('dp', 'fsdp', 'mp'),
-        devices=oracle_device
-    )
+    # all_gpus = jax.devices('gpu')
+    # train_devices = np.array(all_gpus[1:])  # GPUs 1‑7
+    # train_mesh = load_mesh(
+    #     shape=(7, 1, 1),
+    #     axis_names=('dp', 'fsdp', 'mp'),
+    #     devices=train_devices  # <-- key part
+    # )
+    # oracle_device = np.array([all_gpus[0]])  # GPU‑0 only
+    # oracle_mesh = load_mesh(
+    #     shape=(1, 1, 1),
+    #     axis_names=('dp', 'fsdp', 'mp'),
+    #     devices=oracle_device
+    # )
 
 
     nltk.download('punkt')
@@ -141,7 +141,7 @@ def main(
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
 
-    mesh = train_mesh #load_mesh((data_mesh_shape, fsdp_mesh_shape, model_mesh_shape), ('dp', 'fsdp', 'mp'))
+    mesh = load_mesh((data_mesh_shape, fsdp_mesh_shape, model_mesh_shape), ('dp', 'fsdp', 'mp'))
     is_main_process = jax.process_index() == 0
     print(f"Mesh: {mesh}")
     print(f"Is main process: {is_main_process}")
