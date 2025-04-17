@@ -127,7 +127,7 @@ def main(
     )
     oracle_device = np.array([all_gpus[0]])  # GPU‑0 only
     oracle_mesh = load_mesh(
-        mesh_shape=(1, 1, 1),
+        shape=(1, 1, 1),
         axis_names=('dp', 'fsdp', 'mp'),
         devices=oracle_device
     )
