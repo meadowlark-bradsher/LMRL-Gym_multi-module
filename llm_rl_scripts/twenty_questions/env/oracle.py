@@ -40,51 +40,33 @@ class T5Oracle(TwentyQuestionsOracle):
         self.generation_config = generation_config
         self.blocking_strategy = blocking_strategy
         self.answer_re_pattern = re.compile(r"(yes|no)")
-        
-    def generate_answers(self, words: Union[WordVariants, List[WordVariants]], questions: Union[str, List[str]], return_full: bool=False) -> Union[str, List[str]]:
-        input_is_list = True
-        if not isinstance(words, list):
-            assert not isinstance(questions, list)
-            words = [words]
-            questions = [questions]
-            input_is_list = False
 
-        assert len(words) == len(questions)
+    def unload(self):
+        """Free up memory used by the oracle."""
+        print("[T5Oracle] Unloading oracle and freeing memory.")
+        self.inference = None
+        self.generation_config = None
+        self.blocking_strategy = None
+        self.prng_key = None
 
-        oracle_prompts = [get_t5_oracle_prompt(word, question) for word, question in zip(words, questions)]
+        import gc
+        gc.collect()
 
-        inference_result = self.inference.generate_from_str(
-            input_strs=oracle_prompts,
-            prng_key=self.prng_key,
-            generation_config=self.generation_config, 
-            blocking_strategy=self.blocking_strategy, 
-        )
-        answers = []
-        answers_full = []
-        for question, output_str in zip(questions, inference_result.output_strs):
-            if question == INVALID_QUESTION:
-                answers.append("No.")
-                answers_full.append("No.")
-                continue
+        try:
+            from jax._src import api_util
+            api_util.clear_backends()
+        except ImportError:
+            pass  # fallback if api_util is not exposed
 
-            answer_full = output_str.strip().lower()
-            answer_match = self.answer_re_pattern.match(answer_full)
-            if answer_match is not None:
-                answer = answer_match[0].capitalize() + "."
-            
-            if answer_match is None:
-                answer = "No."
-            
-            answers.append(answer)
-            answers_full.append(answer_full)
+    def __enter__(self):
+        """Support using the oracle as a context manager."""
+        return self
 
-        if not input_is_list:
-            answers = answers[0]
-            answers_full = answers_full[0]
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Unload automatically when exiting context."""
+        self.unload()
 
-        if return_full:
-            return answers, answers_full
-        return answers
+    # (your generate_answers function remains unchanged)
 
     @classmethod
     def load_oracle(
