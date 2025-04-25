@@ -99,7 +99,7 @@ class T5Oracle(TwentyQuestionsOracle):
         max_input_length: int=124,
         max_output_length: int=4,
     ):
-        print(f"ORACLE MESH {mesh}")
+        print(f"[T5Oracle] Loading oracle onto mesh {mesh}")
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
         model_dtype = get_dtype(use_fp16=use_fp16_activations)
@@ -137,12 +137,10 @@ class T5Oracle(TwentyQuestionsOracle):
             truncation=Truncation.RIGHT, 
             max_length=max_input_length, 
         )
-        
-        oracle = cls(
+
+        return cls(
             prng_key=prng_key,
             inference=inference,
             generation_config=generation_config,
             blocking_strategy=blocking_strategy,
         )
-
-        return oracle
