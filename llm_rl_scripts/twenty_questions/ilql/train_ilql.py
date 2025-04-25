@@ -118,20 +118,6 @@ def main(
     cql_weight: float=0.01,
     use_noniterable_dataset: bool=False
 ):
-    # all_gpus = jax.devices('gpu')
-    # train_devices = np.array(all_gpus[1:])  # GPUs 1‑7
-    # train_mesh = load_mesh(
-    #     shape=(7, 1, 1),
-    #     axis_names=('dp', 'fsdp', 'mp'),
-    #     devices=train_devices  # <-- key part
-    # )
-    # oracle_device = np.array([all_gpus[0]])  # GPU‑0 only
-    # oracle_mesh = load_mesh(
-    #     shape=(1, 1, 1),
-    #     axis_names=('dp', 'fsdp', 'mp'),
-    #     devices=oracle_device
-    # )
-
 
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
@@ -406,35 +392,10 @@ def main(
     )
     oracle_prng = jax.random.PRNGKey(7)
     env = TwentyQuestionsPolicyEnvironment(
-        oracle=T5Oracle.load_oracle(
-            mesh=mesh,
-            prng_key=oracle_prng,
-            model_load_mode=T5OracleModelLoadMode.PARAMS,
-            model_load_path=oracle_model_path,
-            use_fp16_activations=False,
-            use_fp16_params=False,
-            max_input_length=124,
-            max_output_length=4,
-        ),
+        oracle=None,
         word_list=get_default_word_list(),
         max_conversation_length=20,
     )
-    # with oracle_mesh:
-    #     env = TwentyQuestionsPolicyEnvironment(
-    #         oracle=T5Oracle.load_oracle(
-    #             mesh=None,
-    #             prng_key=jax.random.PRNGKey(7),
-    #             model_load_mode=T5OracleModelLoadMode.PARAMS,
-    #             model_load_path=oracle_model_path,
-    #             use_fp16_params=True,
-    #             use_fp16_activations=True,
-    #             max_input_length=124,
-    #             max_output_length=4,
-    #         ),
-    #         word_list=get_default_word_list(),
-    #         max_conversation_length=20,
-    #     )
-
 
     save_dir, exp_name = setup_experiment_save(
         exp_name=exp_name,
@@ -447,8 +408,9 @@ def main(
     policy_prng = jax.random.PRNGKey(0)
 
     def evaluate(inference: GPT2ILQLInference):
-        nonlocal policy_prng
+        nonlocal policy_prng, env
         policy_prng, new_key = jax.random.split(policy_prng)
+
         policy = GPT2ValuePolicy(
             inference=inference.value_inference,
             prng_key=new_key,
@@ -467,43 +429,46 @@ def main(
                 truncation=Truncation.LEFT,
                 max_length=policy_max_input_length,
             ),
-            out_str_process=lambda x: x.removesuffix('\n')+'\n',
+            out_str_process=lambda x: x.removesuffix('\n') + '\n',
         )
 
-        eval_dataset = ILQLIterableDataset.from_ilql_data_iterable(
-            ilql_data_generator(eval_text_trajectories),
-            tokenizer,
-            BlockingStrategy(
-                padding=Padding.RIGHT,
-                truncation=Truncation.RIGHT,
-                max_length=max_length,
-            ),
-        )
+        # === Load Oracle ONLY for Evaluation ===
+        with T5Oracle.load_oracle(
+                mesh=mesh,
+                prng_key=jax.random.PRNGKey(7),
+                model_load_mode=T5OracleModelLoadMode.PARAMS,
+                model_load_path=oracle_model_path,
+                use_fp16_activations=False,
+                use_fp16_params=False,
+                max_input_length=124,
+                max_output_length=4,
+        ) as oracle:
+            env.oracle = oracle  # Attach live oracle into env just for this evaluation
 
-        loss_results = eval_loss(
-            inference=inference,
-            dataset=eval_dataset,
-            prng_key=None,
-            bsize=eval_loss_bsize,
-            eval_batches=eval_loss_batches,
-        )
+            loss_results = eval_loss(
+                inference=inference,
+                dataset=eval_dataset,
+                prng_key=None,
+                bsize=eval_loss_bsize,
+                eval_batches=eval_loss_batches,
+            )
 
-        interaction_raw_results, interaction_summary_results = text_env_eval(
-            env=env,
-            policy=policy,
-            n_rollouts=policy_n_rollouts,
-            bsize=policy_bsize,
-        )
+            interaction_raw_results, interaction_summary_results = text_env_eval(
+                env=env,
+                policy=policy,
+                n_rollouts=policy_n_rollouts,
+                bsize=policy_bsize,
+            )
 
-        for item in interaction_raw_results:
-            print('='*25)
-            print(text_history_to_str(item[-1].post_transition_history))
-            print('='*25)
+            for item in interaction_raw_results:
+                print('=' * 25)
+                print(text_history_to_str(item[-1].post_transition_history))
+                print('=' * 25)
 
-        logs = pull_logs(interaction_summary_results)
-        log(logs, use_wandb and is_main_process)
+            logs = pull_logs(interaction_summary_results)
+            log(logs, use_wandb and is_main_process)
 
-        return loss_results['losses']['total_loss'], {'interaction': logs, 'loss': loss_results}
+            return loss_results['losses']['total_loss'], {'interaction': logs, 'loss': loss_results}
 
     train_prng = jax.random.PRNGKey(1)
     save_dtype = jnp.bfloat16 if save_bf16 else jnp.float32
