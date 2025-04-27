@@ -52,12 +52,6 @@ class T5Oracle(TwentyQuestionsOracle):
         import gc
         gc.collect()
 
-        try:
-            import jax
-            jax.clear_caches()
-        except ImportError:
-            pass  # fallback if api_util is not exposed
-
     def __enter__(self):
         """Support using the oracle as a context manager."""
         return self

@@ -330,8 +330,6 @@ def train_loop(
         _inference_update()
         eval_perf, eval_logs = evaluator(inference)
 
-        import jax
-        jax.clear_caches()
         # publish eval logs
         eval_logs = pull_logs(label_logs(eval_logs, 'eval', {'step': step+1, 'epoch': epoch}))
         log(eval_logs, use_wandb and is_main_process)
