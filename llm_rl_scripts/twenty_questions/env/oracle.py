@@ -53,8 +53,8 @@ class T5Oracle(TwentyQuestionsOracle):
         gc.collect()
 
         try:
-            from jax._src import api_util
-            api_util.clear_backends()
+            import jax
+            jax.clear_caches()
         except ImportError:
             pass  # fallback if api_util is not exposed
 

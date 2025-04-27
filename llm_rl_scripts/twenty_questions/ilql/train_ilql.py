@@ -141,6 +141,8 @@ def main(
     train_text_trajectories = create_trajectories_from_conversations(raw_train)
     eval_text_trajectories = create_trajectories_from_conversations(raw_eval)
 
+    print("complete text trajectories")
+
     def ilql_data_generator(trajectories):
         for trajectory in trajectories:
             trajectory_chain = TextTrajectoryChain(text_trajectory=trajectory,
@@ -149,6 +151,7 @@ def main(
             yield ILQLData.from_token_trajectory_chain(token_trajectory)
 
     if use_noniterable_dataset:
+        print("using non-iterable dataset")
         train_segments_list = list(ilql_data_generator(train_text_trajectories))
         train_dataset = ILQLDataset.from_ilql_data_list(
             train_segments_list,
@@ -160,6 +163,7 @@ def main(
             ),
         )
     else:
+        print("using iterable dataset")
         train_dataset = ILQLIterableDataset.from_ilql_data_iterable(
             ilql_data_generator(train_text_trajectories),
             tokenizer,
