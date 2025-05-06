@@ -12,7 +12,7 @@ def read_requirements_file(filename):
 
 setup(
     name='LLM_RL',
-    version='1.0.1',
+    version='1.0.2',
     description='Implementations of LLM Reinforcement Learning algorithms in JAX.',
     url='https://github.com/Sea-Snell/LLM_RL',
     author='Charlie Snell',
