@@ -116,3 +116,6 @@ git clone https://github.com/Sea-Snell/JaxSEQ
 cd JaxSEQ
 python -m pip install -e .
 ```
+## Documentation
+
+Additional documentation can be found in the [docs](docs/index.md) directory. Start with [Quickstart](docs/quickstart.md) to run a baseline agent and read [Extending](docs/extending.md) for adding new tasks.
